@@ -23,6 +23,11 @@ def countCombos(barcodes,combo,dict,nwise,successC):
  for i in combo:
   if i in barcodes:
    key+=str(barcodes.index(i))+"_"
+  else:
+   for b in barcodes:
+    m=oneMismatch(i,b)
+    if len(m) == 1:
+     key+=str(barcodes.index(b))+"_"
  key=key.strip("_")
  if key != "":
   skey=len(key.split("_"))
