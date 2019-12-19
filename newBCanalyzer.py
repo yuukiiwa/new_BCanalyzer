@@ -1,4 +1,4 @@
-import sys
+import sys, regex
 barf=sys.argv[1]
 fastq=sys.argv[2]
 linker=sys.argv[3].upper()
@@ -12,6 +12,11 @@ def getBarcodes(barf):
   barcodes.append(ln.strip("\r\n"))
  return barcodes
 barcodes=getBarcodes(barf)
+
+def oneMismatch(adaptor,seq):
+ restring='('+adaptor+'){e<=1}'
+ m=regex.findall(restring,seq[:len(adaptor)],overlapped=True)
+ return m
 
 def countCombos(barcodes,combo,dict,nwise,successC):
  key=""
@@ -29,16 +34,13 @@ def countCombos(barcodes,combo,dict,nwise,successC):
    successC+=1
  return (dict,successC)
 
-def addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC):
- lenBarcode=len(barcodes[0])
- seq=seq.split("\n")[0]
- if "N" not in seq and seq.startswith(adaptor) == True:
-  seq=seq[len(adaptor):].split(linker)
-  if len(seq) == nwise+1:
-   combo=[seq[0][-8:]]
-   for j in range (1,nwise):
-    if len(seq[j]) == lenBarcode:
-     combo.append(seq[j])
+def seqtoBarcode(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode):
+ seq=seq[len(adaptor):].split(linker)
+ if len(seq) == nwise+1:
+  combo=[seq[0][-8:]]
+  for j in range (1,nwise):
+   if len(seq[j]) == lenBarcode:
+    combo.append(seq[j])
    if len(combo) == nwise:
     row=adaptor
     for b in combo:
@@ -47,6 +49,20 @@ def addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC
     seqs.append(combo)
     COMB=countCombos(barcodes,combo,dict,nwise,successC)
     dict,successC=COMB[0],COMB[1]
+ return (dict,successC)
+
+def addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC):
+ lenBarcode=len(barcodes[0])
+ seq=seq.split("\n")[0]
+ if "N" not in seq:
+  if seq.startswith(adaptor) == True:
+   runseqtoBarcode=seqtoBarcode(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode)
+   dict,successC=runseqtoBarcode[0],runseqtoBarcode[1]
+  else:
+   m=oneMismatch(adaptor,seq)
+   if len(m) > 0:
+    runseqtoBarcode=seqtoBarcode(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode)
+    dict,successC=runseqtoBarcode[0],runseqtoBarcode[1]    
  return (seqs,dict,successC)  
 
 def readFastq(fastq,linker,nwise,barcodes,adaptor):
