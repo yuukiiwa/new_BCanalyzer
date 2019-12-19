@@ -13,9 +13,9 @@ def getBarcodes(barf):
  return barcodes
 barcodes=getBarcodes(barf)
 
-def oneMismatch(adaptor,seq):
- restring='('+adaptor+'){e<=1}'
- m=regex.findall(restring,seq[:len(adaptor)],overlapped=True)
+def oneMismatch(id,seq):
+ restring='('+id+'){e<=1}'
+ m=regex.findall(restring,seq,overlapped=True)
  return m
 
 def countCombos(barcodes,combo,dict,nwise,successC):
@@ -34,8 +34,8 @@ def countCombos(barcodes,combo,dict,nwise,successC):
    successC+=1
  return (dict,successC)
 
-def seqtoBarcode(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode):
- seq=seq[len(adaptor):].split(linker)
+def seqtoBarcode(s,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode):
+ seq=s[len(adaptor):].split(linker)
  if len(seq) == nwise+1:
   combo=[seq[0][-8:]]
   for j in range (1,nwise):
@@ -49,6 +49,8 @@ def seqtoBarcode(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC
     seqs.append(combo)
     COMB=countCombos(barcodes,combo,dict,nwise,successC)
     dict,successC=COMB[0],COMB[1]
+ else:
+  print(oneMismatch(linker,s[len(adaptor):]))
  return (dict,successC)
 
 def addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC):
@@ -59,7 +61,7 @@ def addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC
    runseqtoBarcode=seqtoBarcode(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode)
    dict,successC=runseqtoBarcode[0],runseqtoBarcode[1]
   else:
-   m=oneMismatch(adaptor,seq)
+   m=oneMismatch(adaptor,seq[:len(adaptor)])
    if len(m) > 0:
     runseqtoBarcode=seqtoBarcode(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode)
     dict,successC=runseqtoBarcode[0],runseqtoBarcode[1]    
