@@ -34,6 +34,28 @@ def countCombos(barcodes,combo,dict,nwise,successC):
    successC+=1
  return (dict,successC)
 
+def chop(nwise,S):
+ start=16
+ end=start+18
+ seq=[S[start:end]]
+ for a in range (nwise):
+  start=end-2
+  end=start+18
+  seq.append(S[start:end])
+ truncate=[]
+ for i in seq:
+  m=oneMismatch(linker,i)
+  for j in m:
+   if len(j) == len(linker):
+    truncate.append(j)
+ if len(truncate) == 3:
+  barcodes=[]
+  for link in truncate:
+   end=S.find(link)
+   barcode=S[end-8:end]
+   barcodes.append(barcode)
+  return barcodes
+
 def seqtoBarcode(s,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode):
  seq=s[len(adaptor):].split(linker)
  if len(seq) == nwise+1:
@@ -50,7 +72,15 @@ def seqtoBarcode(s,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,l
     COMB=countCombos(barcodes,combo,dict,nwise,successC)
     dict,successC=COMB[0],COMB[1]
  else:
-  print(oneMismatch(linker,s[len(adaptor):]))
+  combo=chop(nwise,s[len(adaptor):])
+  if combo != None:
+   row=adaptor
+   for b in combo:
+    row+=","+b
+   sampsepout.write(row+"\r\n")
+   seqs.append(combo)
+   COMB=countCombos(barcodes,combo,dict,nwise,successC)
+   dict,successC=COMB[0],COMB[1]
  return (dict,successC)
 
 def addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC):
