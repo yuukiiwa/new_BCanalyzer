@@ -1,4 +1,8 @@
 # new BCanalyzer
+Before running the program, please check whether regex (not the traditional re module) is installed. To install regex:
+```
+pip install regex
+```
 To run the program:
 ```
 python newBCanalyzer.py [list of barcodes] [fastq NGS file] [linker sequence] [number of dimensions]
