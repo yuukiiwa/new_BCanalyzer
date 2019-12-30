@@ -11,6 +11,7 @@ linker=args.l.upper()
 nwise=args.n
 adaptor=fastq.split("_")[1]
 
+#get all the barcodes used in the experiment
 def getBarcodes(barf):
  file=open(barf,"r")
  barcodes=[]
@@ -19,6 +20,7 @@ def getBarcodes(barf):
  return barcodes
 barcodes=getBarcodes(barf)
 
+#allowing one nt mismatch in the sample id/barcode in the sequence
 def oneMismatch(id,seq):
  restring='('+id+'){e<=1}'
  m=regex.findall(restring,seq,overlapped=True)
@@ -96,37 +98,38 @@ def seqtoBarcode(s,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,l
 
 def addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC):
  lenBarcode=len(barcodes[0])
- seq=seq.split("\n")[0]
- if "N" not in seq:
-  if seq.startswith(adaptor) == True:
+ seq=seq.split("\n")[0] #this keeps the 2nd line of the fastq entry
+ if "N" not in seq:  #make sure that none of the nt sequenced is uncertain
+  if seq.startswith(adaptor) == True:  #if the seqeunce starts with exact match with the sample id (adaptor here)
    runseqtoBarcode=seqtoBarcode(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode)
    dict,successC=runseqtoBarcode[0],runseqtoBarcode[1]
-  else:
-   m=oneMismatch(adaptor,seq[:len(adaptor)])
-   if len(m) > 0:
+  else: #if the start of the sequence is not an exact match of the sample id (adaptor here)
+   m=oneMismatch(adaptor,seq[:len(adaptor)]) #find whether a sequence with 1nt mismatch within the sample id region
+   if len(m) > 0: #the max. of this is 1, which indicates that a sequence contains 1nt mismatch from the sample id region
     runseqtoBarcode=seqtoBarcode(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode)
     dict,successC=runseqtoBarcode[0],runseqtoBarcode[1]    
  return (seqs,dict,successC)  
 
+#the running of the program starts here
 def readFastq(fastq,linker,nwise,barcodes,adaptor):
- file=open(fastq,"r") 
- sampsepfn="sample_"+adaptor+".csv"
+ file=open(fastq,"r") #open the fastq input file
+ sampsepfn="sample_"+adaptor+".csv" #open the sample separator output file
  sampsepout=open(sampsepfn,"w")
- row="Sample_ID"
+ row="Sample_ID"              #generate the header for the sample separator output
  for a in range (nwise):
   row+=",BC"+str(nwise-a)
  sampsepout.write(row+"\r\n")
- sampseprp="sample_"+adaptor+"_report.csv"
+ sampseprp="sample_"+adaptor+"_report.csv" #open the report file for the sample separator
  sampseprep=open(sampseprp,"w")
  seq,seqs,totalEntries,dict,successC="",[],0,{},0
- for ln in file:
-  if ln.startswith("@"):
-   totalEntries+=1
-   if seq != "":
+ for ln in file:   
+  if ln.startswith("@"): #each fastq entry starts with a "@"
+   totalEntries+=1 
+   if seq != "":   #this adds the seq to the seq list if it is not empty
     R=addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC)
     seqs,dict,successC=R[0],R[1],R[2]
    seq=""
-  elif "+" not in ln:
+  elif "+" not in ln:  #this add the 2nd (the sequence) and 4th (the quality scores) line of a fastq entry to seq
    seq+=ln
  R=addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC)
  seqs,dict=R[0],R[1]
