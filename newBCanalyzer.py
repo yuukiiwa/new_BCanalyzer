@@ -28,21 +28,21 @@ def oneMismatch(id,seq):
 
 def countCombos(barcodes,combo,dict,nwise,successC):
  key=""
- for i in combo:
-  if i in barcodes:
-   key+=str(barcodes.index(i))+"_"
-  else:
-   for b in barcodes:
-    m=oneMismatch(i,b)
-    if len(m) == 1:
-     key+=str(barcodes.index(b))+"_"
- key=key.strip("_")
- if key != "":
-  skey=len(key.split("_"))
-  if skey == nwise and key not in dict:
+ for i in combo: #for each barcode in the combo
+  if i in barcodes: #exact match of the barcode
+   key+=str(barcodes.index(i))+"_" #generate the key
+  else: #if the barcode is not found in the barcode list
+   for b in barcodes: #loop thorough all the barcodes
+    m=oneMismatch(i,b) #to see whether there's a barcode with a 1nt mismatch
+    if len(m) == 1: #the list can be > 1, which can be ambiguious, so only one 1nt-mistmach map is counted
+     key+=str(barcodes.index(b))+"_" #genreate the key
+ key=key.strip("_") #generate the key
+ if key != "": #if the key is not empty
+  skey=len(key.split("_")) #see whether the key contains all the barcodes in all dimensions
+  if skey == nwise and key not in dict: # add key to successful count and the dictionary if the key is not in the dictionary
    dict[key]=[1]
    successC+=1
-  elif skey == nwise and key in dict:
+  elif skey == nwise and key in dict: #add the entry to the key and successful count if the key is in the dictionary already
    dict[key].append(dict[key][-1]+1)
    successC+=1
  return (dict,successC)
@@ -70,30 +70,30 @@ def chop(nwise,S):
   return barcodes
 
 def seqtoBarcode(s,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode):
- seq=s[len(adaptor):].split(linker)
- if len(seq) == nwise+1:
-  combo=[seq[0][-8:]]
-  for j in range (1,nwise):
-   if len(seq[j]) == lenBarcode:
-    combo.append(seq[j])
-   if len(combo) == nwise:
-    row=adaptor
+ seq=s[len(adaptor):].split(linker) #looking for exact matches for all linkers
+ if len(seq) == nwise+1:  #if all of the linkers were sequenced to be correct
+  combo=[seq[0][-8:]] #add the 1st barcode to combo
+  for j in range (1,nwise): #for each of the rest of the barcodes
+   if len(seq[j]) == lenBarcode: #if after splitting the following barcodes are of the lengths of a barcode =
+    combo.append(seq[j]) #add the barcode to the combo
+   if len(combo) == nwise: #if there are all n # of barcodes in a combo
+    row=adaptor #generate the row added to the sample speparator output
     for b in combo:
      row+=","+b
     sampsepout.write(row+"\r\n")
-    seqs.append(combo)
+    seqs.append(combo) #add the combo to list of sequences
     COMB=countCombos(barcodes,combo,dict,nwise,successC)
-    dict,successC=COMB[0],COMB[1]
+    dict,successC=COMB[0],COMB[1] #dictionary contains all the keys and # of entries; all successful counts
  else:
   combo=chop(nwise,s[len(adaptor):])
   if combo != None:
-   row=adaptor
+   row=adaptor #generate the row added to the sample speparator output
    for b in combo:
     row+=","+b
    sampsepout.write(row+"\r\n")
-   seqs.append(combo)
+   seqs.append(combo) #add the combo to list of sequences
    COMB=countCombos(barcodes,combo,dict,nwise,successC)
-   dict,successC=COMB[0],COMB[1]
+   dict,successC=COMB[0],COMB[1] #dictionary contains all the keys and # of entries; all successful counts
  return (dict,successC)
 
 def addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC):
