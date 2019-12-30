@@ -148,7 +148,7 @@ def outBCanalyzer(barcodes,dict,BCout):
  BCout.close()
 
 def batchProcess(ngsd,linker,nwise,barcodes):
- outDir=ngsd+"_out"
+ outDir=ngsd+"outputs"
  try: 
   os.mkdir(outDir)
  except FileExistsError:
