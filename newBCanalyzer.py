@@ -5,10 +5,7 @@ parser.add_argument("-f", required=True, type=str, help="fastq file")
 parser.add_argument("-l", required=True, type=str, help="linker sequence")
 parser.add_argument("-n", default=2, type=int, help="nwise")
 args=parser.parse_args()
-barf=args.b
-fastq=args.f
-linker=args.l.upper()
-nwise=args.n
+barf,fastq,linker,nwise=args.b,args.f,args.l.upper(),args.n
 adaptor=fastq.split("_")[1]
 
 #get all the barcodes used in the experiment
