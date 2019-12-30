@@ -1,8 +1,14 @@
-import sys, regex
-barf=sys.argv[1]
-fastq=sys.argv[2]
-linker=sys.argv[3].upper()
-nwise=int(sys.argv[4])
+import argparse, regex
+parser = argparse.ArgumentParser()
+parser.add_argument("-b", required=True, type=str, help="barcode list")
+parser.add_argument("-f", required=True, type=str, help="fastq file")
+parser.add_argument("-l", required=True, type=str, help="linker sequence")
+parser.add_argument("-n", default=2, type=int, help="nwise")
+args=parser.parse_args()
+barf=args.b
+fastq=args.f
+linker=args.l.upper()
+nwise=args.n
 adaptor=fastq.split("_")[1]
 
 def getBarcodes(barf):
