@@ -42,31 +42,32 @@ def countCombos(barcodes,combo,dict,nwise,successC):
   if skey == nwise and key not in dict: # add key to successful count and the dictionary if the key is not in the dictionary
    dict[key]=[1]
    successC+=1
-  elif skey == nwise and key in dict: #add the entry to the key and successful count if the key is in the dictionary already
+  elif skey == nwise and key in dict: #add the entry # to the key and successful count if the key is in the dictionary already
    dict[key].append(dict[key][-1]+1)
    successC+=1
  return (dict,successC)
 
+#this locates the specific location of the barcodes with 4 extra nts (front and end) and maps each of them
 def chop(nwise,S):
- start=16
- end=start+18
- seq=[S[start:end]]
- for a in range (nwise):
-  start=end-2
-  end=start+18
-  seq.append(S[start:end])
+ start=16 #start position
+ end=start+18 #end position
+ seq=[S[start:end]] #add the first barcode containing sequence into the list
+ for a in range (nwise): #adding the rest of the barcode contain sequence(s) into the list
+  start=end-2 #new start positon with 2 extra nt in the front
+  end=start+18 #new end positon with 2 extra nt in the end
+  seq.append(S[start:end]) 
  truncate=[]
- for i in seq:
-  m=oneMismatch(linker,i)
-  for j in m:
-   if len(j) == len(linker):
-    truncate.append(j)
- if len(truncate) == 3:
+ for i in seq: #for each of the barcode containing sequences
+  m=oneMismatch(linker,i) #check for whether the linker has one mismatch
+  for j in m: #for each of the 1nt-mismatch sequence found
+   if len(j) == len(linker): #if that 1nt-mismatch sequence is of the length of the linker
+    truncate.append(j) #append the linker to the linker list
+ if len(truncate) == 3: #if there are three linkers in the mismatch list
   barcodes=[]
-  for link in truncate:
-   end=S.find(link)
-   barcode=S[end-8:end]
-   barcodes.append(barcode)
+  for link in truncate: 
+   end=S.find(link) #find the position of the linker
+   barcode=S[end-8:end] #extract the 8nt before the linker as the barcode
+   barcodes.append(barcode) #append the barcode to the list of barcode in that combo
   return barcodes
 
 def seqtoBarcode(s,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode):
@@ -84,9 +85,9 @@ def seqtoBarcode(s,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,l
     seqs.append(combo) #add the combo to list of sequences
     COMB=countCombos(barcodes,combo,dict,nwise,successC)
     dict,successC=COMB[0],COMB[1] #dictionary contains all the keys and # of entries; all successful counts
- else:
+ else: #if some linkers are not correctly sequenced, they cannot split
   combo=chop(nwise,s[len(adaptor):])
-  if combo != None:
+  if combo != None: #the chop function only return the barcode combo list only if there are three linkers
    row=adaptor #generate the row added to the sample speparator output
    for b in combo:
     row+=","+b
@@ -102,12 +103,12 @@ def addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC
  if "N" not in seq:  #make sure that none of the nt sequenced is uncertain
   if seq.startswith(adaptor) == True:  #if the seqeunce starts with exact match with the sample id (adaptor here)
    runseqtoBarcode=seqtoBarcode(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode)
-   dict,successC=runseqtoBarcode[0],runseqtoBarcode[1]
+   dict,successC=runseqtoBarcode[0],runseqtoBarcode[1] #dictionary contains all the keys and # of entries; all successful counts
   else: #if the start of the sequence is not an exact match of the sample id (adaptor here)
    m=oneMismatch(adaptor,seq[:len(adaptor)]) #find whether a sequence with 1nt mismatch within the sample id region
    if len(m) > 0: #the max. of this is 1, which indicates that a sequence contains 1nt mismatch from the sample id region
     runseqtoBarcode=seqtoBarcode(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC,lenBarcode)
-    dict,successC=runseqtoBarcode[0],runseqtoBarcode[1]    
+    dict,successC=runseqtoBarcode[0],runseqtoBarcode[1]   #dictionary contains all the keys and # of entries; all successful counts
  return (seqs,dict,successC)  
 
 #the running of the program starts here
