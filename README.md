@@ -5,7 +5,6 @@ pip install regex
 ```
 To run the program:
 ```
-python newBCanalyzer.py [list of barcodes] [fastq NGS file] [linker sequence] [number of dimensions]
+python newBCanalyzer.py -b <list of barcodes> -f <fastq NGS file> -l <linker sequence> [-n number of dimensions]
 ```
-- Now- working on allowing one mismatch in the barcodes
-- 12/19/19- updated the program allowing one mismatch in the index sequence and the linkers
+-argument -n is optional, and the default value is 2
