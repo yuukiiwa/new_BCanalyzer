@@ -6,5 +6,6 @@ pip install regex
 To run the program:
 ```
 python newBCanalyzer.py -b <list of barcodes> -f <fastq NGS file> -l <linker sequence> [-n number of dimensions]
+#the argument -n is optional, and the default value is 2
 ```
--argument -n is optional, and the default value is 2
+- 12/30/19: back from Europe! Annotating the code! 
