@@ -1,12 +1,11 @@
-import argparse, regex
+import argparse, regex, os
 parser = argparse.ArgumentParser()
 parser.add_argument("-b", required=True, type=str, help="barcode list")
-parser.add_argument("-f", required=True, type=str, help="fastq file")
-parser.add_argument("-l", required=True, type=str, help="linker sequence")
+parser.add_argument("-d", required=True, type=str, help="fastq file")
+parser.add_argument("-l", default="CAATTC", type=str, help="linker sequence")
 parser.add_argument("-n", default=2, type=int, help="nwise")
 args=parser.parse_args()
-barf,fastq,linker,nwise=args.b,args.f,args.l.upper(),args.n
-adaptor=fastq.split("_")[1]
+barf,ngsd,linker,nwise=args.b,args.d,args.l.upper(),args.n
 
 #get all the barcodes used in the experiment
 def getBarcodes(barf):
@@ -108,16 +107,15 @@ def addSeqtoSeqs(seq,seqs,adaptor,linker,nwise,barcodes,dict,sampsepout,successC
     dict,successC=runseqtoBarcode[0],runseqtoBarcode[1]   #dictionary contains all the keys and # of entries; all successful counts
  return (seqs,dict,successC)  
 
-#the running of the program starts here
-def readFastq(fastq,linker,nwise,barcodes,adaptor):
+def readFastq(fastq,linker,nwise,barcodes,adaptor,outDir):
  file=open(fastq,"r") #open the fastq input file
- sampsepfn="sample_"+adaptor+".csv" #open the sample separator output file
+ sampsepfn=outDir+"/sample_"+adaptor+".csv" #open the sample separator output file
  sampsepout=open(sampsepfn,"w")
  row="Sample_ID"              #generate the header for the sample separator output
  for a in range (nwise):
   row+=",BC"+str(nwise-a)
  sampsepout.write(row+"\r\n")
- sampseprp="sample_"+adaptor+"_report.csv" #open the report file for the sample separator
+ sampseprp=outDir+"/sample_"+adaptor+"_report.csv" #open the report file for the sample separator
  sampseprep=open(sampseprp,"w")
  seq,seqs,totalEntries,dict,successC="",[],0,{},0
  for ln in file:   
@@ -138,23 +136,7 @@ def readFastq(fastq,linker,nwise,barcodes,adaptor):
  sampseprep.write("Discarded reads: ,"+str(totalEntries-len(seqs))+"\r\n")
  sampseprep.close()
  return (seqs,dict,successC)
-Fastq=readFastq(fastq,linker,nwise,barcodes,adaptor)
-seqs,dict,successC=Fastq[0],Fastq[1],Fastq[2]
 
-BCfn="BCcount_"+adaptor+".csv"
-BCout=open(BCfn,"w")
-BCout.write("Sample ID: ,"+adaptor+"\r\n")
-BCout.write("Input count: ,"+str(len(seqs))+"\r\n")
-BCout.write("Combinations: ,"+str(len(dict))+"\r\n")
-BCout.write("Success Count: ,"+str(successC)+"\r\n")
-BCout.write("Discarded Count: ,"+str(len(seqs)-successC)+"\r\n")
-BCout.write(""+"\r\n")
-BCout.write("Combinations"+"\r\n")
-row=""
-for i in range(nwise):
- row+="BC"+str(nwise-i)+","
-row=row.strip(",")
-BCout.write(row+"\r\n")
 def outBCanalyzer(barcodes,dict,BCout):
  for key in dict:
   k=key.split("_")
@@ -164,4 +146,34 @@ def outBCanalyzer(barcodes,dict,BCout):
   row+=","+str(dict[key][-1])
   BCout.write(row+"\r\n")
  BCout.close()
-outBCanalyzer(barcodes,dict,BCout)
+
+def batchProcess(ngsd,linker,nwise,barcodes):
+ outDir=ngsd+"_out"
+ try: 
+  os.mkdir(outDir)
+ except FileExistsError:
+  print("this output directory exists")
+ filelist=os.listdir(ngsd)
+ ngsd=ngsd.strip("/")
+ for i in filelist:
+  if i.endswith("fastq"):
+   adaptor=i.split("_")[1]
+   fastq=ngsd+"/"+i
+   Fastq=readFastq(fastq,linker,nwise,barcodes,adaptor,outDir)
+   seqs,dict,successC=Fastq[0],Fastq[1],Fastq[2]
+   BCfn=outDir+"/BCcount_"+adaptor+".csv"
+   BCout=open(BCfn,"w")
+   BCout.write("Sample ID: ,"+adaptor+"\r\n")
+   BCout.write("Input count: ,"+str(len(seqs))+"\r\n")
+   BCout.write("Combinations: ,"+str(len(dict))+"\r\n")
+   BCout.write("Success Count: ,"+str(successC)+"\r\n")
+   BCout.write("Discarded Count: ,"+str(len(seqs)-successC)+"\r\n")
+   BCout.write(""+"\r\n")
+   BCout.write("Combinations"+"\r\n")
+   row=""
+   for i in range(nwise):
+    row+="BC"+str(nwise-i)+","
+   row=row.strip(",")
+   BCout.write(row+"\r\n")
+   outBCanalyzer(barcodes,dict,BCout)
+batchProcess(ngsd,linker,nwise,barcodes)
