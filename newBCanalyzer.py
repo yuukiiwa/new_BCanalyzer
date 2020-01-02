@@ -114,7 +114,7 @@ def readFastq(fastq,linker,nwise,barcodes,adaptor,outDir):
  row="Sample_ID"              #generate the header for the sample separator output
  for a in range (nwise):
   row+=",BC"+str(nwise-a)
- sampsepout.write(row+"\r\n")
+ sampsepout.write(row+",,Count"+"\r\n")
  sampseprp=outDir+"/sample_"+adaptor+"_report.csv" #open the report file for the sample separator
  sampseprep=open(sampseprp,"w")
  seq,seqs,totalEntries,dict,successC="",[],0,{},0
