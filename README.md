@@ -9,4 +9,5 @@ python newBCanalyzer.py -b <list of barcodes> -d <directrory of the fastq(s)> [-
 #the argument -l is optional, and the default is CAATTC
 #the argument -n is optional, and the default value is 2
 ```
+- 01/16/20: checking the duplicity of unique index of each fastq read.
 - 12/30/19: back from Europe! Annotating the code! Adding in the batch processing function!
